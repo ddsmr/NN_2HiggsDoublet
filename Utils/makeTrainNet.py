@@ -14,7 +14,7 @@ from tensorflow.keras.callbacks import Callback
 
 from matplotlib.pyplot import rc
 rc('font', **{'family': 'serif', 'serif': ['Latin Modern Roman']})
-fontSizeGlobal = 14
+fontSizeGlobal = 16
 plt.rc('font', size=fontSizeGlobal)
 plt.rc('text', usetex=True)
 
@@ -134,20 +134,22 @@ class PlotEndEpoch(Callback):
     # verbose: int = 1
     # custom_plot_func = None
 
-    def __init__(self, plot_dict, model_name, every_n_epoch=1, verbose=1, custom_plot_func=None):
+    def __init__(self, plot_dict, model_name, every_n_epoch=1, verbose=1, custom_plot_func=None, plot_div_plot=True):
         super(PlotEndEpoch, self).__init__()
         self.plot_dict = plot_dict
         self.model_name = model_name
         self.every_n_epoch = every_n_epoch
         self.verbose = verbose
         self.custom_plot_func = custom_plot_func
+        self.plot_div_plot = plot_div_plot
 
     def on_epoch_end(self, epoch, logs=None):
 
         if (epoch + 1) % self.every_n_epoch == 0 or epoch == 0:
             test_arr = self.plot_dict['TestArr']
             pred_arr = self.model.predict(self.plot_dict['PredArr']).flatten()
-            plot_div_plot(test_arr, pred_arr, self.model_name, aux_mod_str=str(epoch + 1))
+            if self.plot_div_plot:
+                plot_div_plot(test_arr, pred_arr, self.model_name, aux_mod_str=str(epoch + 1))
 
             print('Plottting every n', bool(self.custom_plot_func))
             if bool(self.custom_plot_func):
@@ -221,7 +223,7 @@ class DeepNetBonanza:
         return net_str
 
     def train_net(self, nb_epochs, mb_size, save_model=False, show_train_plot=False, show_final_div_plot=False,
-                  plot_every_n=0, cust_callbacks=None):
+                  plot_every_n=0, cust_callbacks=None, plot_div_plot=True):
         """
 
             :param save_model:
@@ -263,6 +265,7 @@ class DeepNetBonanza:
 
             plot_dict = {'TestArr': test_arr, 'PredArr': pred_arr}
             plot_end_epoch = PlotEndEpoch(plot_dict, model_name, every_n_epoch=plot_every_n,
+                                          plot_div_plot=plot_div_plot,
                                           custom_plot_func=self.cust_plot_func)
             callbacks.append(plot_end_epoch)
 
@@ -345,46 +348,53 @@ def _main_test():
         # print(z_flat.shape, Z.shape)
 
         cMap = 'RdYlBu'
-        fig = plt.figure(figsize=(20, 9))
-        (ax2, ax, ax3) = fig.subplots(1, 3)
-        surfPlot = ax.contourf(X1, X2, Z, cmap=cMap, levels=15)
-        fig.colorbar(surfPlot, ax=ax, label=r"$f_{\mathrm{Ack - Pred}}(x_1, x_2)$", shrink=0.7,
-                     format='%.2f')
-        ax.set_xlabel(r"$x_1$")
-        ax.set_ylabel(r"$x_2$")
-        ax.set_title("Net Fit")
-        ax.set_aspect('equal', adjustable='box')
+        # cMap = 'coolwarm_r'
+        fig = plt.figure(figsize=(12, 9))
+        (ax, ax2) = fig.subplots(1, 2)
 
         xArr, yArr = x_arr, y_true_arr
         # surfPlot = ax2.scatter(xArr[:, 0], xArr[:, 1], c=yArr, cmap=cMap)
+
         z2_flat = ackley_func_ndim(net_vec_array)
         Z2 = z2_flat.reshape((gran_nb, gran_nb))
-        surfPlot2 = ax2.contourf(X1, X2, Z2, cmap=cMap, levels=15)
-        fig.colorbar(surfPlot2, ax=ax2, label=r"$f_{\mathrm{Ack - Act}}(x_1, x_2)$", shrink=0.7)
+        surfPlot2 = ax2.contourf(X1, X2, Z2, cmap=cMap,
+                                 levels=11,
+                                 vmin=0, vmax=5)
+        # fig.colorbar(surfPlot2, ax=ax2, label=r"$f_{\mathrm{Ack - Act}}(x_1, x_2)$", shrink=0.5)
         ax2.set_xlabel(r"$x_1$")
-        ax2.set_ylabel(r"$x_2$")
+        # ax2.set_ylabel(r"$x_2$")
         ax2.set_title("Original Function")
         ax2.set_aspect('equal', adjustable='box')
 
-        surfPlot3 = ax3.contourf(X1, X2, np.abs(Z2 - Z), cmap='gray_r', levels=15)
-        fig.colorbar(surfPlot3, ax=ax3, label=r"$\mathrm{Res}$", shrink=0.7)
-        ax3.set_xlabel(r"$x_1$")
-        ax3.set_ylabel(r"$x_2$")
-        ax3.set_title("Absolute residuals")
-        ax3.set_aspect('equal', adjustable='box')
+        surfPlot = ax.contourf(X1, X2, Z, cmap=cMap,
+                               levels=11,
+                               vmin=0, vmax=5)
+        # fig.colorbar(surfPlot, ax=ax, label=r"$f_{\mathrm{Ack - Pred}}(x_1, x_2)$", shrink=0.5,
+        #              format='%.2f')
+        ax.set_xlabel(r"$x_1$")
+        ax.set_ylabel(r"$x_2$")
+        ax.set_title("NN Inferred Function")
+        ax.set_aspect('equal', adjustable='box')
+        fig.colorbar(surfPlot2, ax=[ax, ax2], label=r"$f(x_1, x_2)$", location='bottom',
+                     format='%.2f')
+        # surfPlot3 = ax3.contourf(X1, X2, np.abs(Z2 - Z), cmap='gray_r', levels=15)
+        # fig.colorbar(surfPlot3, ax=ax3, label=r"$\mathrm{Res}$", shrink=0.5)
+        # ax3.set_xlabel(r"$x_1$")
+        # ax3.set_ylabel(r"$x_2$")
+        # ax3.set_title("Absolute residuals")
+        # ax3.set_aspect('equal', adjustable='box')
 
-        fig.suptitle(f"NetArch: N{nb_neurs} L{nb_hidd_lay}  ---  Training at Epoch:{epoch}")
-        plt.tight_layout()
+        fig.suptitle(f"NetArch: N{nb_neurs} L{nb_hidd_lay} ({act_fct})  ---  At end of Training Epoch:{epoch}")
+        # plt.tight_layout()
 
         plt_dir = f'Plots/Ackley_N{nb_neurs}_L{nb_hidd_lay}_M32/'
         plt_str = f'MeshPlots_E{epoch}.png'
         pathlib.Path(plt_dir).mkdir(parents=True, exist_ok=True)
 
-        plt.savefig(f'{plt_dir}{plt_str}')
+        plt.savefig(f'{plt_dir}{plt_str}', bbox_inches='tight', pad_inches=0.1)
 
         # plt.show()
         plt.close(fig)
-
 
     # np.random.seed(0)
     #  ---------  Generate some random data and labels ---------
@@ -399,12 +409,14 @@ def _main_test():
     # nb_neurs = 128
     # nb_hidd_lay = 3
 
-    arch_list = [[16, 4], [32, 4], [64, 3], [128, 3], [256, 2], [512, 1]]
+    arch_list = [[16, 4, 'elu'], [32, 4, 'elu'], [64, 3, 'elu'], [128, 3, 'relu'], [256, 2, 'relu'],
+                 [512, 1, 'relu'],
+                 [512, 2, 'elu']]
 
     for arch in arch_list:
-        nb_neurs, nb_hidd_lay = arch
-        net_inst = DeepNetBonanza(nb_neurs, nb_hidd_lay, train_dict, name='Ackley',
-                                  # test_dict={'x': np.random.uniform(size=(100, 2)),
+        nb_neurs, nb_hidd_lay, act_fct = arch
+        net_inst = DeepNetBonanza(nb_neurs, nb_hidd_lay, train_dict, act_fct=act_fct, name='Ackley',
+                                  #  test_dict={'x': np.random.uniform(size=(100, 2)),
                                   #            'y': np.random.uniform(size=(100, 1))},
                                   drop_rate=0.2,
                                   verbose=1,
@@ -413,7 +425,7 @@ def _main_test():
                                   )
         print(net_inst)
         hist_dict = net_inst.train_net(nb_epochs=300, mb_size=32, save_model=False, show_train_plot=False,
-                                       plot_every_n=30
+                                       plot_every_n=25, plot_div_plot=False
                                        )
         # del net_inst
 
