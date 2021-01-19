@@ -1,4 +1,3 @@
-# import json
 import pickle
 import tensorflow as tf
 import numpy as np
@@ -14,34 +13,6 @@ from Utils.pointBounder import DataBound
 
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-
-###################### NEEDS REWRITE ######################
-def load_files(data_dir='InitData/', header=None):
-    """
-        Load all the data files and merge them into one data frame.
-    """
-    if not bool(header):
-        # header = ['Idx', 'mH1', 'mH2', 'mH3', 'tri_H3H2H1', 'tri_H3H1H1', 'tri_H3H2H2', 'eign_11', 'eign_21',
-        #           'eign_31', 'lambda_HS', 'lambda_sH', 'lambda_sS', 'lambda_H', 'lambda_S', 'lambda_s',
-        #           'vev_v', 'vev_vs', 'vev_vss', 'Br_cascade', 'CrossX_Prod']
-        header = ['mH1', 'mH2', 'mH3', 'trilinearH3H2H1', 'trilinearH3H3H3', 'trilinearH3H3H2', 'trilinearH3H3H1',
-                  'trilinearH3H2H2', 'trilinearH3H1H1', 'trilinearH2H2H1', 'trilinearH2H1H1', 'trilinearH2H2H2',
-                  'trilinearH1H1H1',
-                  'rr_11', 'rr_21', 'rr_31', 'Totaldec', 'Totaldec2', 'Totaldec3', 'lambda_HS', 'lambda_sH',
-                  'lambda_sS', 'lambda_H', 'lambda_S', 'lambda_s', 'v_s', 'v_ss', 'Br_cascade', 'crosx_topbr2',
-                  'crossx_br_cascade_topbr'
-                  ]
-    from os.path import isfile, join
-    file_names = [f_name for f_name in listdir(data_dir) if isfile(join(data_dir, f_name))]
-
-    frames = []
-    for file in file_names:
-        data_frame = pd.read_csv(data_dir + file)
-        data_frame.columns = header
-        frames.append(data_frame)
-
-    merged_df = pd.concat(frames, axis=0)
-    return merged_df.sample(frac=1).reset_index(drop=True)
 
 
 def get_np_arr(model_params, chisq_list, data_frame, n_entries=0):
@@ -73,7 +44,7 @@ def filter_data(x_array, y_array, perc_cut=0.99):
     y_data_cut = sorted_y[cut_idx]
 
     bool_mask = y_array < y_data_cut
-    return x_array[bool_mask, :], y_array[bool_mask]
+    return x_array[bool_mask, :], y_array[bool_mask], bool_mask
 
 
 def split_test_train(x_array, y_array, split_frac=0.85):
@@ -139,7 +110,7 @@ def main_de(chisq_list, params_list, data_frame, filter_chisq=0.0, normalise_x_d
     # ---- Create and fit a neural network for each parameter in the chi2 list ----
     for attr_nb, analysis_attr in enumerate(chisq_list):
         if bool(filter_chisq):
-            x_arr, y_arr = filter_data(x_arr_full, y_arr_full[:, attr_nb], perc_cut=filter_chisq)
+            x_arr, y_arr, _ = filter_data(x_arr_full, y_arr_full[:, attr_nb], perc_cut=filter_chisq)
         else:
             x_arr, y_arr = x_arr_full, y_arr_full[:, attr_nb]
 
@@ -148,8 +119,10 @@ def main_de(chisq_list, params_list, data_frame, filter_chisq=0.0, normalise_x_d
         if bool(test_arch) and isinstance(test_arch, dict):
             from Utils.makeTrainNet import DeepNetBonanza
             # nb_epochs, mb_size = test_arch['nb_epochs'], test_arch['mb_size']
-            nb_neur, nb_lay = test_arch[analysis_attr][0], test_arch[analysis_attr][1]
-            net_inst = DeepNetBonanza(nb_neur, nb_lay, train_dict, name=analysis_attr,
+            nb_neur, nb_lay, act_fct = test_arch[analysis_attr]
+            net_inst = DeepNetBonanza(nb_neurs=nb_neur, nb_layers=nb_lay, act_fct=act_fct,
+                                      train_dict=train_dict,
+                                      name=analysis_attr,
                                       drop_rate=0.2,
                                       verbose=1)
             net_inst.train_net(nb_epochs=nb_epochs, mb_size=mb_size, save_model=True, show_train_plot=True,
@@ -276,7 +249,7 @@ def export_pred_data(new_points_arr, header_list):
 
 
 def main_part_swarm_min(data_frame, list_probe, params_list, chisq_list, nb_seeds, nb_sprouts, r_sigma, model_dict, swarm_loss_fct_list,
-                        n_particles=10, nb_itters=100):
+                        n_particles=10, nb_itters=100, test_param_cont=True, test_cust_consist=None):
     with open('DE_arch.pickle', 'rb') as pckl_in:
         run_dict = pickle.load(pckl_in)
     domain_bounds = run_dict['DataBounds']
@@ -294,6 +267,7 @@ def main_part_swarm_min(data_frame, list_probe, params_list, chisq_list, nb_seed
         net_dict.update({model_name: tf.keras.models.load_model(model_path)})
 
     for try_nb in range(nb_seeds):
+        print('-' * 90)
         # ---- Call instance of PSO ----
         ps_hyparams = {'c1': 0.1, 'c2': 0.1, 'w': 1.0, 'k': 4, 'p': 2}
 
@@ -307,77 +281,99 @@ def main_part_swarm_min(data_frame, list_probe, params_list, chisq_list, nb_seed
 
         # ---- Generate and normalise the new points if necessary
         new_arr = _gen_points_around_seed(best_vec, nb_sprouts, r_sigma)
+
         if 'NormInst' in run_dict.keys():
             data_normaliser = run_dict['NormInst']
             print('Set is normalised')
             new_arr = data_normaliser.invNormData(new_arr, None)
+        else:
+            data_normaliser = None
 
-        new_arr = probe_contour(new_arr, list_probe, params_list, dat_bounder)
-        print(new_arr.shape)
+        if test_param_cont:
+            new_arr = probe_contour(new_arr, list_probe, params_list, dat_bounder)
+            print(new_arr.shape, ' Points remaining after probing conistency contours.')
+
+        if bool(test_cust_consist) and isinstance(test_cust_consist, type(lambda x: 1)):
+            new_arr = test_cust_consist(new_arr, params_list, net_dict, data_normaliser)
+
         new_points_arr = np.concatenate((new_points_arr, new_arr), axis=0)
+        print('-' * 90)
 
+    print(f'Total {new_points_arr.shape} new points')
     export_pred_data(new_points_arr, params_list)
     return None
 
 
-if __name__ == "__main__":
-    # np.random.seed(0)
-    data_frame_m = load_files()
-    # Filter by the 95% value of the chi squared measure.
-    filter_by_chisq_m = 0.9
-    norm_x_data = True
-    # Attributes that go into chi square measure
-    # chisq_attr_m = ['CrossX_Prod', 'mH3']
-    chisq_attr_m = ['crossx_br_cascade_topbr', 'rr_11']
-    arch_list = [[64, 4, 'relu'], [8, 6, 'relu']]
-    arch_dict_test = {chi_att: arch_desc for chi_att, arch_desc in zip(chisq_attr_m, arch_list)}
-    arch_dict_test.update({'nb_epochs': 3000, 'mb_size': 128})
+def _test_func_ackley():
+    """
+        Subroutine to exemplify on the Ackley function test.
+    :return:
+    """
 
-    # Parameters of the model
-    # model_params_m = ['lambda_HS', 'lambda_sH', 'lambda_sS', 'lambda_H', 'lambda_S', 'lambda_s', 'vev_vs', 'vev_vss']
-    model_params_m = ['lambda_HS', 'lambda_sH', 'lambda_sS', 'lambda_H', 'lambda_S', 'lambda_s', 'v_s', 'v_ss']
+    def ackley_func_ndim(x_n_dimm_array, a_norm_fact=20, b_norm_fact=0.2, c_norm_fact=2 * np.pi):
+        """
+            Given a (M x N) array, the function computes the ackley function for the N dimension.
+        """
+        n_dimm = x_n_dimm_array.shape[1]
+        sum_sq = np.sum(np.square(x_n_dimm_array), axis=1)
+        cos_sum = np.sum(np.cos(c_norm_fact * x_n_dimm_array), axis=1)
 
-    # import matplotlib.pyplot as plt
-    # for attr in model_params_m:
-    #     print(data_frame_m[attr].min(), data_frame_m[attr].max())
-    #     data_frame_m.plot(use_index=True, y=attr)
-    #     plt.show()
+        ack_func_t1 = - a_norm_fact * np.exp(- b_norm_fact * np.sqrt(sum_sq / n_dimm))
+        ack_func_t2 = - np.exp(cos_sum / n_dimm) + a_norm_fact + np.exp(1)
 
-    bool_masks = [(-1, 1) for _ in range(len(model_params_m) - 2)]
+        return ack_func_t1 + ack_func_t2
 
-    for min_max_tuple, cut_attr in zip(bool_masks, model_params_m):
-        max_bound, min_bound = min_max_tuple[1], min_max_tuple[0]
-        sub_bool_mask = (data_frame_m[cut_attr] > min_bound) & (max_bound > data_frame_m[cut_attr])
-        data_frame_m = data_frame_m[sub_bool_mask]
+    def gen_ackley_df(nb_points=100, a_low=-1, b_high=1, nb_dims=2):
+        """
+            Generate the dataframe for the ackley function.
+        :return:
+        """
+        # np.random.seed(0)
+        #  ---------  Generate some random data and labels ---------
 
-    main_de(chisq_attr_m, model_params_m, data_frame_m,
-            filter_chisq=filter_by_chisq_m,
-            normalise_x_data=norm_x_data,
-            n_samples=10000,
-            mb_size=32,
-            # test_arch=arch_dict_test,
-            nb_epochs=300, averaging_number=10, max_iter=2
+        x_data = np.random.uniform(low=a_low, high=b_high, size=(nb_points, nb_dims))
+        y_data = ackley_func_ndim(x_data)
+
+        param_list = ['x_n_' + str(x_dimm_count) for x_dimm_count in range(nb_dims)]
+        chisq_list = ['y_Ackley']
+
+        df_dict = {x_param: x_data[:, i] for x_param, i in zip(param_list, range(nb_dims))}
+        df_dict.update({chisq_list[0]: y_data})
+        ackley_df = pd.DataFrame.from_dict(df_dict)
+
+        return param_list, chisq_list, ackley_df
+
+    # --------- Initialise the differential evolution ---------
+    param_list, chisq_attr, data_frame = gen_ackley_df()
+
+    main_de(chisq_list=chisq_attr, params_list=param_list, data_frame=data_frame,
+            # Optionals
+            mb_size=32, nb_epochs=100,
+            averaging_number=5, max_iter=1
             )
-    exit()
-    # ------------------------------------------ Swarm: Predict new points ------------------------------------------
-    # List of parameters to probe sub regions.
-    # list_probe_m = ['lambda_HS', 'lambda_sH', 'lambda_sS', 'lambda_H', 'lambda_S', 'lambda_s', 'v_s', 'v_ss']
-    list_probe_m = ['v_s', 'v_ss']
-    #  Use particle swarm to predict new points
-    model_dict_m = {chisq_attr_m[0]: 'crossx_br_cascade_topbr_N64_L4_relu_linear_E3000_MB128',
-                    chisq_attr_m[1]: 'rr_11_N8_L6_relu_linear_E3000_MB128'}
 
-    swarm_loss_fct_list_m = [lambda x: 1 / np.exp(x),
-                             lambda x: np.square(x - 1.0) / 0.2**2]
+    model_list = ['y_Ackley_N512_L2_relu_linear_E10_MB32']
+    list_probe = param_list
+    nb_trial_points = 1000
+    seed_red = 100
+    r_sigma = 0.1
+    nb_itters = 50
 
-    nb_trial_points_m = 10000
-    r_sigma_m = 0.3
-    nb_seeds_m = int(nb_trial_points_m / 500)
-    nb_sprouts_m = int(nb_trial_points_m / nb_seeds_m)
-    main_part_swarm_min(data_frame_m,
-                        list_probe_m, model_params_m, chisq_attr_m,
-                        nb_seeds_m, nb_sprouts_m,
-                        r_sigma_m,
-                        model_dict_m,
-                        swarm_loss_fct_list_m
+    model_dict = {attr: model_arch for attr, model_arch in zip(chisq_attr, model_list)}
+
+    # Minimisation combination functions
+    swarm_loss_fct_list = [lambda x: np.square(x - 0.0) / (0.01 ** 2)]
+    nb_seeds = int(nb_trial_points / seed_red)
+    nb_sprouts = int(nb_trial_points / nb_seeds)
+    main_part_swarm_min(data_frame=data_frame, list_probe=list_probe, params_list=param_list,
+                        chisq_list=chisq_attr, nb_seeds=nb_seeds, nb_sprouts=nb_sprouts, r_sigma=r_sigma,
+                        model_dict=model_dict, swarm_loss_fct_list=swarm_loss_fct_list,
+                        # Optionals
+                        nb_itters=nb_itters,
+                        test_param_cont=True
                         )
+
+
+if __name__ == "__main__":
+    print('Running Ackley function example')
+    _test_func_ackley()

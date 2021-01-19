@@ -166,3 +166,58 @@ This property should not be used in TensorFlow 2.0, as updates are applied autom
 2020-10-28 18:17:45,525 - pyswarms.single.global_best - INFO - Optimize for 100 iters with {'c1': 0.1, 'c2': 0.1, 'w': 1.0, 'k': 4, 'p': 2}
 2020-10-28 18:17:51,304 - pyswarms.single.global_best - INFO - Optimization finished | best cost: 10.237435430288315, best pos: [-0.50873293 -1.88992592 -1.39859534  2.35750614  0.17336461 -1.06266277
   1.39614465 -1.33191769]
+2020-12-10 14:38:06,596 - tensorflow - WARNING - From /usr/local/lib/python3.7/site-packages/tensorflow/python/training/tracking/tracking.py:111: Model.state_updates (from tensorflow.python.keras.engine.training) is deprecated and will be removed in a future version.
+Instructions for updating:
+This property should not be used in TensorFlow 2.0, as updates are applied automatically.
+2020-12-10 14:38:06,606 - tensorflow - WARNING - From /usr/local/lib/python3.7/site-packages/tensorflow/python/training/tracking/tracking.py:111: Layer.updates (from tensorflow.python.keras.engine.base_layer) is deprecated and will be removed in a future version.
+Instructions for updating:
+This property should not be used in TensorFlow 2.0, as updates are applied automatically.
+2020-12-10 14:38:07,334 - tensorflow - INFO - Assets written to: Models/mWpm_N32_L4_relu_linear_E20_MB16/assets
+2020-12-10 14:38:31,333 - tensorflow - INFO - Assets written to: Models/mTop_N1024_L4_relu_linear_E20_MB16/assets
+2021-01-15 13:38:13,888 - tensorflow - WARNING - From /usr/local/lib/python3.7/site-packages/tensorflow/python/training/tracking/tracking.py:111: Model.state_updates (from tensorflow.python.keras.engine.training) is deprecated and will be removed in a future version.
+Instructions for updating:
+This property should not be used in TensorFlow 2.0, as updates are applied automatically.
+2021-01-15 13:38:13,895 - tensorflow - WARNING - From /usr/local/lib/python3.7/site-packages/tensorflow/python/training/tracking/tracking.py:111: Layer.updates (from tensorflow.python.keras.engine.base_layer) is deprecated and will be removed in a future version.
+Instructions for updating:
+This property should not be used in TensorFlow 2.0, as updates are applied automatically.
+2021-01-15 13:38:14,457 - tensorflow - INFO - Assets written to: Models/y_Ackley_N512_L2_relu_linear_E10_MB32/assets
+2021-01-15 13:41:52,129 - pyswarms.single.global_best - INFO - Optimize for 20 iters with {'c1': 0.1, 'c2': 0.1, 'w': 1.0, 'k': 4, 'p': 2}
+2021-01-15 13:41:52,935 - pyswarms.single.global_best - INFO - Optimization finished | best cost: 18512.25, best pos: [-0.02389363 -0.01626017]
+2021-01-15 13:41:52,951 - pyswarms.single.global_best - INFO - Optimize for 20 iters with {'c1': 0.1, 'c2': 0.1, 'w': 1.0, 'k': 4, 'p': 2}
+2021-01-15 13:41:53,568 - pyswarms.single.global_best - INFO - Optimization finished | best cost: 19177.06640625, best pos: [-0.07519289  0.02804309]
+2021-01-15 13:41:53,576 - pyswarms.single.global_best - INFO - Optimize for 20 iters with {'c1': 0.1, 'c2': 0.1, 'w': 1.0, 'k': 4, 'p': 2}
+2021-01-15 13:41:54,183 - pyswarms.single.global_best - INFO - Optimization finished | best cost: 19587.958984375, best pos: [-0.096313   -0.03938236]
+2021-01-15 13:41:54,191 - pyswarms.single.global_best - INFO - Optimize for 20 iters with {'c1': 0.1, 'c2': 0.1, 'w': 1.0, 'k': 4, 'p': 2}
+2021-01-15 13:41:54,796 - pyswarms.single.global_best - INFO - Optimization finished | best cost: 19077.5546875, best pos: [-0.05875028  0.04350939]
+2021-01-15 13:41:54,805 - pyswarms.single.global_best - INFO - Optimize for 20 iters with {'c1': 0.1, 'c2': 0.1, 'w': 1.0, 'k': 4, 'p': 2}
+2021-01-15 13:41:55,423 - pyswarms.single.global_best - INFO - Optimization finished | best cost: 18586.57421875, best pos: [-0.01998627  0.02599021]
+2021-01-15 13:41:55,432 - pyswarms.single.global_best - INFO - Optimize for 20 iters with {'c1': 0.1, 'c2': 0.1, 'w': 1.0, 'k': 4, 'p': 2}
+2021-01-15 13:41:56,053 - pyswarms.single.global_best - INFO - Optimization finished | best cost: 20236.642578125, best pos: [0.05131898 0.10717534]
+2021-01-15 13:41:56,059 - pyswarms.single.global_best - INFO - Optimize for 20 iters with {'c1': 0.1, 'c2': 0.1, 'w': 1.0, 'k': 4, 'p': 2}
+2021-01-15 13:41:56,668 - pyswarms.single.global_best - INFO - Optimization finished | best cost: 18700.08203125, best pos: [0.03025726 0.02926325]
+2021-01-15 13:41:56,678 - pyswarms.single.global_best - INFO - Optimize for 20 iters with {'c1': 0.1, 'c2': 0.1, 'w': 1.0, 'k': 4, 'p': 2}
+2021-01-15 13:41:57,286 - pyswarms.single.global_best - INFO - Optimization finished | best cost: 19035.845703125, best pos: [0.06207063 0.00876267]
+2021-01-15 13:41:57,294 - pyswarms.single.global_best - INFO - Optimize for 20 iters with {'c1': 0.1, 'c2': 0.1, 'w': 1.0, 'k': 4, 'p': 2}
+2021-01-15 13:41:57,900 - pyswarms.single.global_best - INFO - Optimization finished | best cost: 19539.220703125, best pos: [-0.01701051  0.09361952]
+2021-01-15 13:41:57,909 - pyswarms.single.global_best - INFO - Optimize for 20 iters with {'c1': 0.1, 'c2': 0.1, 'w': 1.0, 'k': 4, 'p': 2}
+2021-01-15 13:41:58,523 - pyswarms.single.global_best - INFO - Optimization finished | best cost: 21747.59765625, best pos: [0.12874774 0.07240903]
+2021-01-15 13:42:52,387 - pyswarms.single.global_best - INFO - Optimize for 50 iters with {'c1': 0.1, 'c2': 0.1, 'w': 1.0, 'k': 4, 'p': 2}
+2021-01-15 13:42:54,199 - pyswarms.single.global_best - INFO - Optimization finished | best cost: 18606.6796875, best pos: [0.02664943 0.00575689]
+2021-01-15 13:42:54,213 - pyswarms.single.global_best - INFO - Optimize for 50 iters with {'c1': 0.1, 'c2': 0.1, 'w': 1.0, 'k': 4, 'p': 2}
+2021-01-15 13:42:55,697 - pyswarms.single.global_best - INFO - Optimization finished | best cost: 18650.341796875, best pos: [ 0.00986038 -0.0339843 ]
+2021-01-15 13:42:55,705 - pyswarms.single.global_best - INFO - Optimize for 50 iters with {'c1': 0.1, 'c2': 0.1, 'w': 1.0, 'k': 4, 'p': 2}
+2021-01-15 13:42:57,201 - pyswarms.single.global_best - INFO - Optimization finished | best cost: 18496.244140625, best pos: [-0.01359101 -0.0071778 ]
+2021-01-15 13:42:57,224 - pyswarms.single.global_best - INFO - Optimize for 50 iters with {'c1': 0.1, 'c2': 0.1, 'w': 1.0, 'k': 4, 'p': 2}
+2021-01-15 13:42:58,719 - pyswarms.single.global_best - INFO - Optimization finished | best cost: 18496.45703125, best pos: [-0.01213733  0.00182738]
+2021-01-15 13:42:58,727 - pyswarms.single.global_best - INFO - Optimize for 50 iters with {'c1': 0.1, 'c2': 0.1, 'w': 1.0, 'k': 4, 'p': 2}
+2021-01-15 13:43:00,235 - pyswarms.single.global_best - INFO - Optimization finished | best cost: 18516.65234375, best pos: [-0.00176571  0.00881428]
+2021-01-15 13:43:00,244 - pyswarms.single.global_best - INFO - Optimize for 50 iters with {'c1': 0.1, 'c2': 0.1, 'w': 1.0, 'k': 4, 'p': 2}
+2021-01-15 13:43:01,735 - pyswarms.single.global_best - INFO - Optimization finished | best cost: 18588.380859375, best pos: [ 0.01343781 -0.01965255]
+2021-01-15 13:43:01,742 - pyswarms.single.global_best - INFO - Optimize for 50 iters with {'c1': 0.1, 'c2': 0.1, 'w': 1.0, 'k': 4, 'p': 2}
+2021-01-15 13:43:03,263 - pyswarms.single.global_best - INFO - Optimization finished | best cost: 18531.234375, best pos: [8.87068264e-03 9.99423848e-05]
+2021-01-15 13:43:03,273 - pyswarms.single.global_best - INFO - Optimize for 50 iters with {'c1': 0.1, 'c2': 0.1, 'w': 1.0, 'k': 4, 'p': 2}
+2021-01-15 13:43:04,838 - pyswarms.single.global_best - INFO - Optimization finished | best cost: 18580.11328125, best pos: [-0.03152397 -0.02831953]
+2021-01-15 13:43:04,847 - pyswarms.single.global_best - INFO - Optimize for 50 iters with {'c1': 0.1, 'c2': 0.1, 'w': 1.0, 'k': 4, 'p': 2}
+2021-01-15 13:43:06,332 - pyswarms.single.global_best - INFO - Optimization finished | best cost: 18528.326171875, best pos: [-6.71820884e-05 -1.59902509e-02]
+2021-01-15 13:43:06,340 - pyswarms.single.global_best - INFO - Optimize for 50 iters with {'c1': 0.1, 'c2': 0.1, 'w': 1.0, 'k': 4, 'p': 2}
+2021-01-15 13:43:07,837 - pyswarms.single.global_best - INFO - Optimization finished | best cost: 18635.25390625, best pos: [-0.03227476  0.02401396]

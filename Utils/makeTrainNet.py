@@ -1,19 +1,22 @@
 import os
 import types
 # from tensorflow import keras
-from dataclasses import dataclass
 
 import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
+import pathlib
+
+from dataclasses import dataclass
 from tensorflow.keras import layers, Model
 from tensorflow.keras.callbacks import Callback
 
 
-# rc('font', **{'family': 'serif', 'serif': ['Latin Modern Roman']})
-# fontSizeGlobal = 16
-# plt.rc('font', size=fontSizeGlobal)
-# plt.rc('text', usetex=True)
+from matplotlib.pyplot import rc
+rc('font', **{'family': 'serif', 'serif': ['Latin Modern Roman']})
+fontSizeGlobal = 14
+plt.rc('font', size=fontSizeGlobal)
+plt.rc('text', usetex=True)
 
 
 def plot_training_hist(hist_dict, model_name, file_ext='pdf'):
@@ -141,7 +144,7 @@ class PlotEndEpoch(Callback):
 
     def on_epoch_end(self, epoch, logs=None):
 
-        if (epoch + 1) % self.every_n_epoch == 0:
+        if (epoch + 1) % self.every_n_epoch == 0 or epoch == 0:
             test_arr = self.plot_dict['TestArr']
             pred_arr = self.model.predict(self.plot_dict['PredArr']).flatten()
             plot_div_plot(test_arr, pred_arr, self.model_name, aux_mod_str=str(epoch + 1))
@@ -149,7 +152,8 @@ class PlotEndEpoch(Callback):
             print('Plottting every n', bool(self.custom_plot_func))
             if bool(self.custom_plot_func):
                 self.custom_plot_func(test_arr, pred_arr, self.plot_dict['PredArr'],
-                                       self.model_name, aux_mod_str=str(epoch + 1))
+                                       self.model_name, aux_mod_str=str(epoch + 1),
+                                       model_predictor=self.model.predict)
 
 
 @dataclass
@@ -300,28 +304,86 @@ def _main_test():
 
         return ackFunc_T1 + ackFunc_T2
 
-    def cust_plot(y_true_arr, y_pred_arr, x_arr, mod_str, aux_mod_str):
+    def cust_plot(y_true_arr, y_pred_arr, x_arr, mod_str, aux_mod_str, model_predictor=None):
         """
             Custom plot to plot every n.
         :return:
         """
+        # fig = plt.figure(figsize=(20, 9))
+        # (ax1, ax2) = fig.subplots(nrows=1, ncols=2)
+        # cmap = 'RdYlBu'
+
+        # plot1 = ax1.scatter(x=x_arr[:, 0], y=x_arr[:, 1], c=y_true_arr, cmap=cmap)
+        # fig.colorbar(plot1, ax=ax1, label=r"$f_{\mathrm{Ack - True}}(x_1, x_2)$", shrink=0.7,
+        #              format='%.2f')
+        # ax1.set_title('True')
+        # ax1.set_aspect('equal', adjustable='box')
+        #
+        # plot2 = ax2.scatter(x=x_arr[:, 0], y=x_arr[:, 1], c=y_pred_arr, cmap=cmap)
+        # fig.colorbar(plot2, ax=ax2, label=r"$f_{\mathrm{Ack - Pred}}(x_1, x_2)$", shrink=0.7)
+        #
+        # ax2.set_title('Predicted')
+        # ax2.set_aspect('equal', adjustable='box')
+
+        epoch = aux_mod_str
+        gran_nb = 500
+        x1_lin_space = np.linspace(a_low, b_high, num=gran_nb)
+        x2_lin_space = np.linspace(a_low, b_high, num=gran_nb)
+        X1, X2 = np.meshgrid(x1_lin_space, x2_lin_space)
+
+        net_vec_array = []
+        for i in range(gran_nb):
+            for j in range(gran_nb):
+                # coord_vec = np.array([X1[i, j], X2[j, i]])
+                coord_vec = [X1[i, j], X2[i, j]]
+                net_vec_array.append(coord_vec)
+        net_vec_array = np.array(net_vec_array).astype('float64')
+
+        z_flat = model_predictor(net_vec_array)
+
+        Z = z_flat.reshape((gran_nb, gran_nb))
+        # print(z_flat.shape, Z.shape)
+
+        cMap = 'RdYlBu'
         fig = plt.figure(figsize=(20, 9))
-        (ax1, ax2) = fig.subplots(nrows=1, ncols=2)
-        cmap = 'RdYlBu'
-
-        plot1 = ax1.scatter(x=x_arr[:, 0], y=x_arr[:, 1], c=y_true_arr, cmap=cmap)
-        fig.colorbar(plot1, ax=ax1, label=r"$f_{\mathrm{Ack - True}}(x_1, x_2)$", shrink=0.7,
+        (ax2, ax, ax3) = fig.subplots(1, 3)
+        surfPlot = ax.contourf(X1, X2, Z, cmap=cMap, levels=15)
+        fig.colorbar(surfPlot, ax=ax, label=r"$f_{\mathrm{Ack - Pred}}(x_1, x_2)$", shrink=0.7,
                      format='%.2f')
-        ax1.set_title('True')
-        ax1.set_aspect('equal', adjustable='box')
+        ax.set_xlabel(r"$x_1$")
+        ax.set_ylabel(r"$x_2$")
+        ax.set_title("Net Fit")
+        ax.set_aspect('equal', adjustable='box')
 
-        plot2 = ax2.scatter(x=x_arr[:, 0], y=x_arr[:, 1], c=y_pred_arr, cmap=cmap)
-        fig.colorbar(plot2, ax=ax2, label=r"$f_{\mathrm{Ack - Pred}}(x_1, x_2)$", shrink=0.7)
-
-        ax2.set_title('Predicted')
+        xArr, yArr = x_arr, y_true_arr
+        # surfPlot = ax2.scatter(xArr[:, 0], xArr[:, 1], c=yArr, cmap=cMap)
+        z2_flat = ackley_func_ndim(net_vec_array)
+        Z2 = z2_flat.reshape((gran_nb, gran_nb))
+        surfPlot2 = ax2.contourf(X1, X2, Z2, cmap=cMap, levels=15)
+        fig.colorbar(surfPlot2, ax=ax2, label=r"$f_{\mathrm{Ack - Act}}(x_1, x_2)$", shrink=0.7)
+        ax2.set_xlabel(r"$x_1$")
+        ax2.set_ylabel(r"$x_2$")
+        ax2.set_title("Original Function")
         ax2.set_aspect('equal', adjustable='box')
 
-        plt.show()
+        surfPlot3 = ax3.contourf(X1, X2, np.abs(Z2 - Z), cmap='gray_r', levels=15)
+        fig.colorbar(surfPlot3, ax=ax3, label=r"$\mathrm{Res}$", shrink=0.7)
+        ax3.set_xlabel(r"$x_1$")
+        ax3.set_ylabel(r"$x_2$")
+        ax3.set_title("Absolute residuals")
+        ax3.set_aspect('equal', adjustable='box')
+
+        fig.suptitle(f"NetArch: N{nb_neurs} L{nb_hidd_lay}  ---  Training at Epoch:{epoch}")
+        plt.tight_layout()
+
+        plt_dir = f'Plots/Ackley_N{nb_neurs}_L{nb_hidd_lay}_M32/'
+        plt_str = f'MeshPlots_E{epoch}.png'
+        pathlib.Path(plt_dir).mkdir(parents=True, exist_ok=True)
+
+        plt.savefig(f'{plt_dir}{plt_str}')
+
+        # plt.show()
+        plt.close(fig)
 
 
     # np.random.seed(0)
@@ -334,8 +396,14 @@ def _main_test():
 
     train_dict = {'x': x_data, 'y': y_data}
 
-    for _ in range(1):
-        net_inst = DeepNetBonanza(128, 3, train_dict, name='Ackley',
+    # nb_neurs = 128
+    # nb_hidd_lay = 3
+
+    arch_list = [[16, 4], [32, 4], [64, 3], [128, 3], [256, 2], [512, 1]]
+
+    for arch in arch_list:
+        nb_neurs, nb_hidd_lay = arch
+        net_inst = DeepNetBonanza(nb_neurs, nb_hidd_lay, train_dict, name='Ackley',
                                   # test_dict={'x': np.random.uniform(size=(100, 2)),
                                   #            'y': np.random.uniform(size=(100, 1))},
                                   drop_rate=0.2,
@@ -344,8 +412,8 @@ def _main_test():
                                   # valid_split=0.2
                                   )
         print(net_inst)
-        hist_dict = net_inst.train_net(nb_epochs=150, mb_size=128, save_model=False, show_train_plot=False,
-                                       plot_every_n=20
+        hist_dict = net_inst.train_net(nb_epochs=300, mb_size=32, save_model=False, show_train_plot=False,
+                                       plot_every_n=30
                                        )
         # del net_inst
 

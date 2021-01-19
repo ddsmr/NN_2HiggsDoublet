@@ -23,7 +23,7 @@ class DiffEvolPickArch:
                  name='Enkidu', de_loss_dict=None,
                  mb_size=128, nb_epochs=200, de_max_iter=3, out_layer_act_fct='linear',
                  avg_nb=1, loss_mode='last_n',
-                 verbose=1):
+                 verbose=2):
         """
 
         """
@@ -131,8 +131,8 @@ class DiffEvolPickArch:
             # ---------- Update the statistics string ----------
             stat_str += ' ---> '
             for loss_key in loss_dict:
-                stat_str += f'{loss_key} : {loss_dict[loss_key]:.4f}  |  '
-            stat_str += f'Comb DE Loss: {res_loss_part * param_loss:.4f}'
+                stat_str += f'{loss_key} : {loss_dict[loss_key]:.4E}  |  '
+            stat_str += f'Comb DE Loss: {res_loss_part * param_loss:.4E}'
             spinner.text = stat_str
             # de_loss_list.append(de_loss_part)
             res_loss_sum += res_loss_part
@@ -162,7 +162,7 @@ class DiffEvolPickArch:
         del dat_frame, log_loss
 
         print(f'{Fore.RED}MEAN:{Fore.GREEN}{fill_str} {self.name}:: Arch {arch_str}'
-              f' Comb DE Loss {de_loss_avg:.4f} {fill_str}{Style.RESET_ALL}')
+              f' Comb DE Loss {de_loss_avg:.4E} {fill_str}{Style.RESET_ALL}')
 
         return de_loss_avg
 
