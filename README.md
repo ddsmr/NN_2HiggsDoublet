@@ -16,6 +16,6 @@ Test case consists of using the same procedure to find the global minimum of the
 Generalisation:
 	- Can be used for any Monte Carlo exploration. Will write further modularity at a later date.
 
-![aass](Ackley_Plots/Ackley_3D.pdf)
+<!-- ![aass](Ackley_Plots/Ackley_3D.pdf) -->
 
-<!-- ![](Ackley_Plots/DE_Selection.gif) -->
+![](Ackley_Plots/DE_Selection.gif)
